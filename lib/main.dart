@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'QuizzBrain.dart';
 
 void main() => runApp(Quizzler());
+QuizzBrain quizzBrain = QuizzBrain();
 
 class Quizzler extends StatelessWidget {
   @override
@@ -25,6 +28,51 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  List<Icon> scoreKeeper = [];
+
+  void checkAnswer(bool answer) {
+    setState(() {
+      if (quizzBrain.getAnswer() == answer) {
+        scoreKeeper.add(
+          Icon(
+            Icons.check,
+            color: Colors.green,
+          ),
+        );
+      } else {
+        scoreKeeper.add(Icon(Icons.do_not_disturb, color: Colors.red));
+      }
+      quizzBrain.nextQuestion();
+    });
+  }
+
+  void checkIfFinished() {
+    if (quizzBrain.isFinished()) {
+      Alert(
+        context: context,
+        type: AlertType.error,
+        title: "Game Over",
+        desc: "You have finished the game, the game will be reseted",
+        buttons: [
+          DialogButton(
+            child: Text(
+              "Okay",
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                quizzBrain.reset();
+                scoreKeeper.clear();
+              });
+            },
+            width: 120,
+          )
+        ],
+      ).show();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -37,7 +85,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'This is where the question text will go.',
+                quizzBrain.getQuestion(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -61,7 +109,8 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //The user picked true.
+                checkAnswer(true);
+                checkIfFinished();
               },
             ),
           ),
@@ -80,15 +129,22 @@ class _QuizPageState extends State<QuizPage> {
               ),
               onPressed: () {
                 //The user picked false.
+                checkAnswer(false);
+                checkIfFinished();
               },
             ),
           ),
         ),
-        //TODO: Add a Row here as your score keeper
+        Row(
+          children: scoreKeeper,
+        )
       ],
     );
   }
 }
+
+
+
 
 /*
 question1: 'You can lead a cow down stairs but not up stairs.', false,
